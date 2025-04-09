@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from core.views import UserLogin
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path('api/token/', UserLogin.as_view(), name='token_obtain_pair'),
+
 ]
