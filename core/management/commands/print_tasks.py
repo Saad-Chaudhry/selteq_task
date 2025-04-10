@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 from time import sleep
-
 from core.models import Task
 
 

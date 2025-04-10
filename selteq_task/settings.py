@@ -9,8 +9,13 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+import os
 from datetime import timedelta
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-f-k&utt=l2i2=%ho_5%y2x6n!7n1^_#f0=ve)ga%*i^94^9+@h"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 
 # Application definition
@@ -40,7 +45,11 @@ INSTALLED_APPS = [
     "core",
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_celery_beat',
+    'django_celery_results',
 ]
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -81,18 +90,17 @@ WSGI_APPLICATION = "selteq_task.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'selteq_db',
-        'USER': 'sqladmin',
-        'PASSWORD': 'ga%*i^94^9+@h',
-        'HOST': 'selteqserver.database.windows.net',
-        'PORT': '1433',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
         'OPTIONS': {
             'driver': 'ODBC Driver 18 for SQL Server',
             'trust_server_certificate': 'yes',
         },
     }
 }
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -148,3 +156,10 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_TIMEZONE = 'UTC'
